@@ -1,0 +1,27 @@
+{
+  "name": "heal-rest-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Guia-API/Heal-REST-API.git"
+  },
+  "author": "Aneth Michelle Tamariz Moreno, Eduardo Carrera Colorado",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Guia-API/Heal-REST-API/issues"
+  },
+  "homepage": "https://github.com/Guia-API/Heal-REST-API#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mariadb": "^3.4.5",
+    "mysql2": "^3.15.3"
+  }
+}
