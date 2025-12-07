@@ -14,11 +14,9 @@ async function connectDB() {
     try {
         if (process.env.NODE_ENV === "development"){
             pool = mysql.createPool(DB_URL);
-            console.log("✅ MariaDB connected ➡︎ dev")
-
+        
         } else if (process.env.NODE_ENV === "test"){
             pool = mysql.createPool(`${DB_URL}_test`);
-            console.log("✅ MariaDB connected ➡︎ test")
 
         } else{
             pool = mysql.createPool({
@@ -31,15 +29,16 @@ async function connectDB() {
                 connectionLimit: 10,
                 queueLimit: 0
             });
-            console.log("✅ MariaDB connected ➡︎ production")
         }
 
         const connection = await pool.getConnection();
         connection.release();
     
-        //Usar un mejor masking de error
+        console.log(`✅ Database connected ➡︎ ${process.env.NODE_ENV}`)
+    
     } catch(error) {
-        console.error("Error connecting to MariaDB: ", error)
+        console.error("❌ Error in database");
+        process.exit(1);
     };
 }
 
