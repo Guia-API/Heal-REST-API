@@ -55,4 +55,30 @@ self.update = async function (req, res) {
     }
 }
 
+self.updateStatus = async function (req, res) {
+    try{
+        const {id_patient} = req.params;
+        const {status} = req.body;
+        
+        const response = await patient_service.updateStatusPatient(id_patient, status);
+
+        return res.status(200).json({
+            message:"Paciente deshabilitado exitosamente",
+            patient: response
+        })
+
+    } catch (error){
+        if(process.env.NODE_ENV === "production"){
+            return res.status(500).json({
+                message: "Error al deshabilitar el paciente en la base de datos"
+            });
+        }
+
+        console.error("❌ Error en disablePatient: ", error.message);
+        return res.status(500).json({
+            message: "Error del servidor"
+        });
+    }
+}
+
 module.exports = self;
