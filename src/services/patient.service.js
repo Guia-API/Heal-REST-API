@@ -103,15 +103,76 @@ patient_service.updateStatusPatient = async (id_patient, status) => {
 
 
 patient_service.getPatientById = async (id_patient) => {
-    const pool = getPool;
+    const pool = getPool();
 
     const query = 'SELECT * FROM patient WHERE id_patient = ?'
 
     try {
-        const [rows] = await pool.query( query, [id_patient]);
+        const [result] = await pool.query( query, [id_patient]);
 
-        if(rows.lenght === 0) return false;
-        return rows[0];
+        if(result.lenght === 0) return false;
+
+        return result[0];
+
+    } catch (error) {
+        throw {
+            status: error.status || 500,
+            message: error.message || 'Error obteniendo paciente por id'
+        };
+    }
+}
+
+patient_service.getPatients = async (page = 1, limit = 10, status = null) => {
+    try{
+    
+        const pool = getPool();
+
+        const offset = (page - 1) * limit;
+
+        let baseQuery = `
+            FROM patient
+            WHERE 1=1
+        `;
+
+        const params = [];
+
+        if (status !== null) {
+            baseQuery += `AND status = ?`;
+            params.push(status);
+        }
+
+        const query = `
+            SELECT
+                id_patient, 
+                full_name,
+                email,
+                address,
+                date_birth,
+                status
+            ${baseQuery}
+            ORDER BY id_patient ASC
+            LIMIT ? OFFSET ?
+        `
+
+        const queryParams = [...params, limit, offset];
+
+        const countQuery = `
+            SELECT COUNT(*) AS total
+            ${baseQuery}
+        `
+
+        const [patients] = await pool.query(query, queryParams);
+        const [[{total}]] = await pool.query (countQuery, params);
+
+        return {
+            page,
+            limit,
+            status: status === null ? "all" : (status === 1 ? "active" : "inactive"),
+            total,
+            total_pages: Math.ceil(total / limit),
+            data: patients
+        };
+
     } catch (error) {
         throw {
             status: error.status || 500,
