@@ -69,6 +69,39 @@ patient_service.updatePatient = async (id_patient, updated_patient) => {
     }
 }
 
+patient_service.updateStatusPatient = async (id_patient, status) => {
+    const pool = getPool();
+
+    const query = `
+        UPDATE patient
+        SET status = ?
+        WHERE id_patient = ?
+    `;
+
+    try{
+        const [result] = await pool.query(query, [status, id_patient]);
+
+        if (result.affectedRows === 0) {
+            throw {
+                status: 404,
+                message: `No se encontró un paciente con el ID ${id_patient}`
+            };
+        }
+
+        return {
+            id_patient,
+            status
+        };
+
+    } catch (error) {
+        throw {
+            status: error.status || 500,
+            message: error.message || 'Error creating new patient'
+        };
+    }
+}
+
+
 patient_service.getPatientById = async (id_patient) => {
     const pool = getPool;
 
