@@ -2,13 +2,17 @@ const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const DB_USER = process.env.DB_USER;
-const DB_PASSWORD = process.env.DB_PASSWORD;
-const DB_NAME = process.env.DB_NAME;
-const DB_HOST = process.env.DB_HOST;
-const DB_PORT = process.env.DB_PORT;
-const DB_URL = process.env.DB_URL; // solo para entorno development
-let pool;
+const {
+    DB_USER,
+    DB_PASSWORD,
+    DB_NAME,
+    DB_HOST,
+    DB_PORT,
+    DB_URL
+} = process.env;
+
+// solo para entorno development
+let pool = null;
 
 async function connectDB() {
     try {
@@ -38,11 +42,25 @@ async function connectDB() {
     
     } catch(error) {
         console.error("❌ Error in database");
+
+        if(process.env.NODE_ENV === "development"){
+            console.error("Details: ", error.message)
+        }
+
         process.exit(1);
     };
 }
 
+function getPool(){
+    if(!pool){
+        throw new Error(
+            "❌ Error en pool no fue inicializado"
+        );
+    }
+    return pool;
+}
+
 module.exports = {
     connectDB,
-    getPool: () => pool
+    getPool
 };
