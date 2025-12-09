@@ -34,7 +34,7 @@ clinical_history_service.saveClinicalHistory = async (id_patient, new_clinical_h
 
 }
 
-clinical_history_service.updateClinicalHistory = async (id_clinical_hisotry, updated_clinical_history) =>{
+clinical_history_service.updateClinicalHistory = async (id_clinical_history, updated_clinical_history) =>{
     const pool = getPool();
 
     const query = `
@@ -52,7 +52,7 @@ clinical_history_service.updateClinicalHistory = async (id_clinical_hisotry, upd
             updated_clinical_history.creation_date, 
             updated_clinical_history.personal_medical_history, 
             updated_clinical_history.family_medical_history, 
-            id_clinical_hisotry
+            id_clinical_history
         ]);
 
         if(result.affectedRows === 0) {
@@ -73,6 +73,26 @@ clinical_history_service.updateClinicalHistory = async (id_clinical_hisotry, upd
         };
     }
 
+}
+
+clinical_history_service.getClinicialHistoryById = async (id_patient) => {
+    const pool = getPool();
+
+    const query = 'SELECT * FROM medical_history WHERE id_patient = ?'
+
+    try {
+        const [result] = await pool.query(query, [id_patient])
+    
+        if(result.length === 0) return false;
+
+        return result[0];
+    
+    } catch (error) {
+        throw {
+            status: error.status || 500,
+            message: error.message || 'Error obteniendo historial clínico por id'
+        };
+    }
 }
 
 module.exports = clinical_history_service;
