@@ -6,15 +6,14 @@ patient_service.savePatient = async (new_patient) => {
     const pool = getPool();
 
     const query = `
-        INSERT INTO patient (full_name, email, status, address,  date_birth)
-        VALUES (?,?,?,?,?)
+        INSERT INTO patient (full_name, email, address,  date_birth)
+        VALUES (?,?,?,?)
     `;
 
     try{
         const [result] = await pool.query(query, [
             new_patient.full_name,
             new_patient.email,
-            new_patient.status || 'active',
             new_patient.address,
             new_patient.date_birth
         ]);
@@ -71,33 +70,51 @@ patient_service.updatePatient = async (id_patient, updated_patient) => {
 
 patient_service.updateStatusPatient = async (id_patient, status) => {
     const pool = getPool();
-
-    const query = `
-        UPDATE patient
-        SET status = ?
-        WHERE id_patient = ?
-    `;
+    const connection = await pool.getConnection();
 
     try{
-        const [result] = await pool.query(query, [status, id_patient]);
 
-        if (result.affectedRows === 0) {
+        await connection.beginTransaction();
+
+        const query_patient = `
+            UPDATE patient
+            SET status = ?
+            WHERE id_patient = ?
+        `;
+
+        const [patient_result] = await connection.query(query_patient, [status, id_patient]);
+
+        if (patient_result.affectedRows === 0) {
             throw {
                 status: 404,
                 message: `No se encontró un paciente con el ID ${id_patient}`
             };
         }
 
+        const query_clinical_history = `
+            UPDATE medical_history
+            SET status = ?
+            WHERE id_patient = ?
+        `;
+
+        const [clinical_hirtoy_result] = await connection.query(query_clinical_history, [status, id_patient]);
+
+        await connection.commit();
+
         return {
             id_patient,
-            status
+            status,
+            updated_medical_history: clinical_hirtoy_result.affectedRows > 0
         };
 
     } catch (error) {
+        await connection.rollback();
         throw {
             status: error.status || 500,
             message: error.message || 'Error creating new patient'
         };
+    } finally {
+        connection.release();
     }
 }
 
