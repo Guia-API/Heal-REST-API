@@ -117,13 +117,13 @@ self.getPatients = async function (req, res) {
     try {
         let page = parseInt(req.query.page, 10) || 1;
         let limit = parseInt(req.query.limit, 10) || 10;
-        let status = req.query.status ? req.query.status.toLowerCase : null;
+        let status = req.query.status !== undefined ? Number(req.query.status) : null;
 
         if (page < 1) page = 1;
         if (limit < 1) limit = 10;
         if (limit > 100) limit = 100;
 
-        const validStatuses = ["active", "inactive"];
+        const validStatuses = [1, 0];
         if (status && !validStatuses.includes(status)){
             return res.status(400).json({
                 ok: false,
