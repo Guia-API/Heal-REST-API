@@ -1,3 +1,4 @@
+const e = require('express');
 const { getPool } = require('../database');
 const bcrypt = require('bcrypt');
 
@@ -56,40 +57,13 @@ employee_service.saveEmployee = async (data) => {
   } catch (error) {
     await connection.rollback();
     throw {
-      status: 500,
-      message: 'Error creando empleado'
+      status: error.status || 500,
+      message: error.message || 'Error creando empleado'
     };
+
   } finally {
     connection.release();
   }
-};
-
-employee_service.updateEmployee = async (id_employee, data) => {
-  const pool = getPool();
-
-  const query = `
-    UPDATE employee
-    SET
-      full_name = ?,
-      date_birth = ?,
-      cell_phone = ?,
-      rol = ?
-    WHERE id_employee = ?
-  `;
-
-  const [result] = await pool.query(query, [
-    data.full_name,
-    data.date_birth,
-    data.cell_phone,
-    data.rol,
-    id_employee
-  ]);
-
-  if (result.affectedRows === 0) {
-    throw { status: 404, message: 'Empleado no encontrado' };
-  }
-
-  return { id_employee, ...data };
 };
 
 
@@ -178,72 +152,91 @@ employee_service.updateEmployee = async (id_employee, data) => {
 };
 
 
-
 employee_service.getEmployeeById = async (id_employee) => {
-  const pool = getPool();
+  try {
+    const pool = getPool();
 
-  const query = `
-    SELECT
-      e.id_employee,
-      e.full_name,
-      e.date_birth,
-      e.cell_phone,
-      e.rol,
-      u.email,
-      u.status
-    FROM employee e
-    JOIN user u ON u.id_user = e.id_user
-    WHERE e.id_employee = ?
-  `;
+    const [result] = await pool.query(
+      `
+      SELECT
+        e.id_employee,
+        e.full_name,
+        e.date_birth,
+        e.cell_phone,
+        e.rol,
+        u.email,
+        u.status
+      FROM employee e
+      JOIN user u ON u.id_user = e.id_user
+      WHERE e.id_employee = ?
+      `,
+      [id_employee]
+    );
 
-  const [result] = await pool.query(query, [id_employee]);
+    return result.length ? result[0] : null;
 
-  return result.length ? result[0] : null;
+  } catch (error) {
+    throw {
+      status: error.status || 500,
+      message: error.message || 'Error obteniendo empleado por ID'
+    };
+  }
 };
 
 employee_service.getEmployees = async (page = 1, limit = 10, status = null) => {
-  const pool = getPool();
-  const offset = (page - 1) * limit;
+  try {
+    const pool = getPool();
+    const offset = (page - 1) * limit;
 
-  let where = '';
-  const params = [];
+    let where = '';
+    const params = [];
 
-  if (status !== null) {
-    where = 'WHERE u.status = ?';
-    params.push(status === 'active' ? 1 : 0);
+    if (status !== null) {
+      where = 'WHERE u.status = ?';
+      params.push(status === 'active' ? 1 : 0);
+    }
+
+    const [data] = await pool.query(
+      `
+      SELECT
+        e.id_employee,
+        e.full_name,
+        e.rol,
+        u.email,
+        u.status
+      FROM employee e
+      JOIN user u ON u.id_user = e.id_user
+      ${where}
+      ORDER BY e.id_employee
+      LIMIT ? OFFSET ?
+      `,
+      [...params, limit, offset]
+    );
+
+    const [[{ total }]] = await pool.query(
+      `
+      SELECT COUNT(*) AS total
+      FROM employee e
+      JOIN user u ON u.id_user = e.id_user
+      ${where}
+      `,
+      params
+    );
+
+    return {
+      page,
+      limit,
+      total,
+      total_pages: Math.ceil(total / limit),
+      data
+    };
+
+  } catch (error) {
+    throw {
+      status: error.status || 500,
+      message: error.message || 'Error obteniendo lista de empleados'
+    };
   }
-
-  const query = `
-    SELECT
-      e.id_employee,
-      e.full_name,
-      e.rol,
-      u.email,
-      u.status
-    FROM employee e
-    JOIN user u ON u.id_user = e.id_user
-    ${where}
-    ORDER BY e.id_employee
-    LIMIT ? OFFSET ?
-  `;
-
-  const countQuery = `
-    SELECT COUNT(*) AS total
-    FROM employee e
-    JOIN user u ON u.id_user = e.id_user
-    ${where}
-  `;
-
-  const [data] = await pool.query(query, [...params, limit, offset]);
-  const [[{ total }]] = await pool.query(countQuery, params);
-
-  return {
-    page,
-    limit,
-    total,
-    total_pages: Math.ceil(total / limit),
-    data
-  };
 };
 
 module.exports = employee_service;
