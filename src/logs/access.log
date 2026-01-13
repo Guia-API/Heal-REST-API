@@ -1,3 +1,0 @@
-[2026-01-12T17:28:46.384Z] POST /api/employee-management 500 - 127.0.0.1 - Anónimo - 390ms
-[2026-01-12T17:31:20.018Z] POST /api/employee-management 500 - 127.0.0.1 - Anónimo - 160ms
-[2026-01-12T17:38:14.956Z] POST /api/employee-management 201 - 127.0.0.1 - Anónimo - 205ms

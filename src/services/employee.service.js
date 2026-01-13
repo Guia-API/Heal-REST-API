@@ -1,4 +1,3 @@
-const e = require('express');
 const { getPool } = require('../database');
 const bcrypt = require('bcrypt');
 
@@ -11,38 +10,37 @@ employee_service.saveEmployee = async (data) => {
   try {
     await connection.beginTransaction();
 
+    const [[existingUser]] = await connection.query(
+      'SELECT id_user FROM user WHERE email = ?',
+      [data.email]
+    );
+
+    if (existingUser) {
+      throw { status: 409, message: 'El email ya está registrado' };
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    const userQuery = `
-      INSERT INTO user (email, password)
-      VALUES (?, ?)
-    `;
-
-    const [userResult] = await connection.query(userQuery, [
-      data.email,
-      hashedPassword
-    ]);
+    const [userResult] = await connection.query(
+      `INSERT INTO user (email, password) VALUES (?, ?)`,
+      [data.email, hashedPassword]
+    );
 
     const id_user = userResult.insertId;
 
-    const employeeQuery = `
-      INSERT INTO employee (
-        id_user,
-        full_name,
-        date_birth,
-        cell_phone,
-        rol
-      )
+    const [employeeResult] = await connection.query(
+      `
+      INSERT INTO employee (id_user, full_name, date_birth, cell_phone, rol)
       VALUES (?, ?, ?, ?, ?)
-    `;
-
-    const [employeeResult] = await connection.query(employeeQuery, [
-      id_user,
-      data.full_name,
-      data.date_birth,
-      data.cell_phone,
-      data.rol
-    ]);
+      `,
+      [
+        id_user,
+        data.full_name,
+        data.date_birth,
+        data.cell_phone,
+        data.rol
+      ]
+    );
 
     await connection.commit();
 
@@ -56,16 +54,19 @@ employee_service.saveEmployee = async (data) => {
 
   } catch (error) {
     await connection.rollback();
+
+    if (error.code === 'ER_DUP_ENTRY') {
+      throw { status: 409, message: 'El email ya está registrado' };
+    }
+
     throw {
       status: error.status || 500,
       message: error.message || 'Error creando empleado'
     };
-
   } finally {
     connection.release();
   }
 };
-
 
 employee_service.updateEmployee = async (id_employee, data) => {
   const pool = getPool();
@@ -75,7 +76,7 @@ employee_service.updateEmployee = async (id_employee, data) => {
     await connection.beginTransaction();
 
     const [[employee]] = await connection.query(
-      `SELECT id_user FROM employee WHERE id_employee = ?`,
+      'SELECT id_user FROM employee WHERE id_employee = ?',
       [id_employee]
     );
 
@@ -109,12 +110,15 @@ employee_service.updateEmployee = async (id_employee, data) => {
 
     await connection.commit();
 
-    return {
-      id_employee
-    };
+    return { id_employee };
 
   } catch (error) {
     await connection.rollback();
+
+    if (error.code === 'ER_DUP_ENTRY') {
+      throw { status: 409, message: 'El email ya está en uso' };
+    }
+
     throw {
       status: error.status || 500,
       message: error.message || 'Error actualizando empleado'
@@ -127,14 +131,15 @@ employee_service.updateEmployee = async (id_employee, data) => {
 employee_service.updateStatusEmployee = async (id_employee, status) => {
   const pool = getPool();
 
-  const query = `
+  const [result] = await pool.query(
+    `
     UPDATE user u
     JOIN employee e ON e.id_user = u.id_user
     SET u.status = ?
     WHERE e.id_employee = ?
-  `;
-
-  const [result] = await pool.query(query, [status, id_employee]);
+    `,
+    [status, id_employee]
+  );
 
   if (result.affectedRows === 0) {
     throw { status: 404, message: 'Empleado no encontrado' };
@@ -143,92 +148,75 @@ employee_service.updateStatusEmployee = async (id_employee, status) => {
   return { id_employee, status };
 };
 
-
 employee_service.getEmployeeById = async (id_employee) => {
-  try {
-    const pool = getPool();
+  const pool = getPool();
 
-    const [result] = await pool.query(
-      `
-      SELECT
-        e.id_employee,
-        e.full_name,
-        e.date_birth,
-        e.cell_phone,
-        e.rol,
-        u.email,
-        u.status
-      FROM employee e
-      JOIN user u ON u.id_user = e.id_user
-      WHERE e.id_employee = ?
-      `,
-      [id_employee]
-    );
+  const [result] = await pool.query(
+    `
+    SELECT
+      e.id_employee,
+      e.full_name,
+      e.date_birth,
+      e.cell_phone,
+      e.rol,
+      u.email,
+      u.status
+    FROM employee e
+    JOIN user u ON u.id_user = e.id_user
+    WHERE e.id_employee = ?
+    `,
+    [id_employee]
+  );
 
-    return result.length ? result[0] : null;
-
-  } catch (error) {
-    throw {
-      status: error.status || 500,
-      message: error.message || 'Error obteniendo empleado por ID'
-    };
-  }
+  return result.length ? result[0] : null;
 };
 
 employee_service.getEmployees = async (page = 1, limit = 10, status = null) => {
-  try {
-    const pool = getPool();
-    const offset = (page - 1) * limit;
+  const pool = getPool();
+  const offset = (page - 1) * limit;
 
-    let where = '';
-    const params = [];
+  let where = '';
+  const params = [];
 
-    if (status !== null) {
-      where = 'WHERE u.status = ?';
-      params.push(status === 'active' ? 1 : 0);
-    }
-
-    const [data] = await pool.query(
-      `
-      SELECT
-        e.id_employee,
-        e.full_name,
-        e.rol,
-        u.email,
-        u.status
-      FROM employee e
-      JOIN user u ON u.id_user = e.id_user
-      ${where}
-      ORDER BY e.id_employee
-      LIMIT ? OFFSET ?
-      `,
-      [...params, limit, offset]
-    );
-
-    const [[{ total }]] = await pool.query(
-      `
-      SELECT COUNT(*) AS total
-      FROM employee e
-      JOIN user u ON u.id_user = e.id_user
-      ${where}
-      `,
-      params
-    );
-
-    return {
-      page,
-      limit,
-      total,
-      total_pages: Math.ceil(total / limit),
-      data
-    };
-
-  } catch (error) {
-    throw {
-      status: error.status || 500,
-      message: error.message || 'Error obteniendo lista de empleados'
-    };
+  if (status !== null) {
+    where = 'WHERE u.status = ?';
+    params.push(status === 'active' ? 1 : 0);
   }
+
+  const [data] = await pool.query(
+    `
+    SELECT
+      e.id_employee,
+      e.full_name,
+      e.rol,
+      u.email,
+      u.status
+    FROM employee e
+    JOIN user u ON u.id_user = e.id_user
+    ${where}
+    ORDER BY e.id_employee
+    LIMIT ? OFFSET ?
+    `,
+    [...params, limit, offset]
+  );
+
+  const [[{ total }]] = await pool.query(
+    `
+    SELECT COUNT(*) AS total
+    FROM employee e
+    JOIN user u ON u.id_user = e.id_user
+    ${where}
+    `,
+    params
+  );
+
+  return {
+    page,
+    limit,
+    total,
+    total_pages: Math.ceil(total / limit),
+    data
+  };
 };
 
 const buildUpdateQuery = (data, allowedFields) => {
@@ -242,11 +230,7 @@ const buildUpdateQuery = (data, allowedFields) => {
     }
   }
 
-  return {
-    fields,
-    values
-  };
+  return { fields, values };
 };
-
 
 module.exports = employee_service;

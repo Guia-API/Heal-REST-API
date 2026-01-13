@@ -1,2 +1,0 @@
-[2026-01-12T17:28:46.375Z] 500 - 127.0.0.1 - Anónimo - Error creando empleado
-[2026-01-12T17:31:20.010Z] 500 - 127.0.0.1 - Anónimo - Unknown column 'id_user' in 'INSERT INTO'
