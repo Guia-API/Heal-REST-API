@@ -5,9 +5,6 @@ dotenv.config();
 const jwtSecret = process.env.JWT_SECRET;
 const refreshSecret = process.env.JWT_REFRESH_SECRET;
 
-/**
- * ACCESS TOKEN (20 min)
- */
 const generateToken = (id, email, name, role) => {
   return jwt.sign(
     {
@@ -23,9 +20,6 @@ const generateToken = (id, email, name, role) => {
   );
 };
 
-/**
- * REFRESH TOKEN (7 días)
- */
 const generateRefreshToken = (id) => {
   return jwt.sign(
     {
@@ -38,16 +32,11 @@ const generateRefreshToken = (id) => {
   );
 };
 
-/**
- * VERIFY ACCESS TOKEN
- */
 const verifyToken = (token) => {
   return jwt.verify(token, jwtSecret);
 };
 
-/**
- * VERIFY REFRESH TOKEN
- */
+
 const verifyRefreshToken = (token) => {
   return jwt.verify(token, refreshSecret);
 };
