@@ -48,7 +48,7 @@ self.updateStatus = async (req, res, next) => {
         );
 
         return res.status(200).json({
-            message: "Empleado deshabilitado exitosamente",
+            message: "El estado del empleado ha sido actualizado exitosamente",
             employee: response
         });
 

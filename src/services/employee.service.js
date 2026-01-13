@@ -74,70 +74,43 @@ employee_service.updateEmployee = async (id_employee, data) => {
   try {
     await connection.beginTransaction();
 
-    const getUserQuery = `
-      SELECT id_user
-      FROM employee
-      WHERE id_employee = ?
-    `;
-
-    const [[employee]] = await connection.query(getUserQuery, [id_employee]);
+    const [[employee]] = await connection.query(
+      `SELECT id_user FROM employee WHERE id_employee = ?`,
+      [id_employee]
+    );
 
     if (!employee) {
       throw { status: 404, message: 'Empleado no encontrado' };
     }
 
-    const id_user = employee.id_user;
-
-    if (data.email || data.password) {
-      const userFields = [];
-      const userValues = [];
-
-      if (data.email) {
-        userFields.push('email = ?');
-        userValues.push(data.email);
-      }
-
-      if (data.password) {
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-        userFields.push('password = ?');
-        userValues.push(hashedPassword);
-      }
-
-      const userQuery = `
-        UPDATE user
-        SET ${userFields.join(', ')}
-        WHERE id_user = ?
-      `;
-
-      await connection.query(userQuery, [...userValues, id_user]);
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
     }
 
-    const employeeQuery = `
-      UPDATE employee
-      SET
-        full_name = ?,
-        date_birth = ?,
-        cell_phone = ?,
-        rol = ?
-      WHERE id_employee = ?
-    `;
+    const userUpdate = buildUpdateQuery(data, ['email', 'password']);
+    if (userUpdate.fields.length) {
+      await connection.query(
+        `UPDATE user SET ${userUpdate.fields.join(', ')} WHERE id_user = ?`,
+        [...userUpdate.values, employee.id_user]
+      );
+    }
 
-    await connection.query(employeeQuery, [
-      data.full_name,
-      data.date_birth,
-      data.cell_phone,
-      data.rol,
-      id_employee
-    ]);
+    const employeeUpdate = buildUpdateQuery(
+      data,
+      ['full_name', 'date_birth', 'cell_phone', 'rol']
+    );
+
+    if (employeeUpdate.fields.length) {
+      await connection.query(
+        `UPDATE employee SET ${employeeUpdate.fields.join(', ')} WHERE id_employee = ?`,
+        [...employeeUpdate.values, id_employee]
+      );
+    }
 
     await connection.commit();
 
     return {
-      id_employee,
-      id_user,
-      full_name: data.full_name,
-      email: data.email,
-      rol: data.rol
+      id_employee
     };
 
   } catch (error) {
@@ -149,6 +122,25 @@ employee_service.updateEmployee = async (id_employee, data) => {
   } finally {
     connection.release();
   }
+};
+
+employee_service.updateStatusEmployee = async (id_employee, status) => {
+  const pool = getPool();
+
+  const query = `
+    UPDATE user u
+    JOIN employee e ON e.id_user = u.id_user
+    SET u.status = ?
+    WHERE e.id_employee = ?
+  `;
+
+  const [result] = await pool.query(query, [status, id_employee]);
+
+  if (result.affectedRows === 0) {
+    throw { status: 404, message: 'Empleado no encontrado' };
+  }
+
+  return { id_employee, status };
 };
 
 
@@ -238,5 +230,23 @@ employee_service.getEmployees = async (page = 1, limit = 10, status = null) => {
     };
   }
 };
+
+const buildUpdateQuery = (data, allowedFields) => {
+  const fields = [];
+  const values = [];
+
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      fields.push(`${field} = ?`);
+      values.push(data[field]);
+    }
+  }
+
+  return {
+    fields,
+    values
+  };
+};
+
 
 module.exports = employee_service;

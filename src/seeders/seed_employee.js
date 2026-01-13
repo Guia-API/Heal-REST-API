@@ -8,7 +8,7 @@ const employees = [
     cell_phone: "2291122334",
     rol: "Doctor",
     email: "roberto.gomez@clinic.com",
-    password: "123456"
+    password: "@123456Patito"
   },
   {
     full_name: "Dra. Ana Torres",
@@ -16,7 +16,7 @@ const employees = [
     cell_phone: "2295544332",
     rol: "Doctor",
     email: "ana.torres@clinic.com",
-    password: "123456"
+    password: "@123456Patito"
   }
 ];
 
