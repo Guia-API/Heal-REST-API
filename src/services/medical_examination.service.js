@@ -2,6 +2,20 @@ const { getPool } = require('../database');
 
 const medical_examination_service = {};
 
+const buildUpdateQuery = (data, allowedFields) => {
+  const fields = [];
+  const values = [];
+
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      fields.push(`${field} = ?`);
+      values.push(data[field]);
+    }
+  }
+
+  return { fields, values };
+};
+
 medical_examination_service.saveMedicalExamination = async (new_examination) => {
   const pool = getPool();
 
@@ -19,27 +33,20 @@ medical_examination_service.saveMedicalExamination = async (new_examination) => 
     VALUES (?,?,?,?,?,?,?,?)
   `;
 
-  try {
-    const [result] = await pool.query(query, [
-      new_examination.id_medical_history,
-      new_examination.prescription,
-      new_examination.medical_diagnosis,
-      new_examination.symptoms,
-      new_examination.date,
-      new_examination.reason,
-      new_examination.comments,
-      new_examination.type
-    ]);
+  const [result] = await pool.query(query, [
+    new_examination.id_medical_history,
+    new_examination.prescription,
+    new_examination.medical_diagnosis,
+    new_examination.symptoms,
+    new_examination.date,
+    new_examination.reason,
+    new_examination.comments,
+    new_examination.type
+  ]);
 
-    return {
-      id_medical_examination: result.insertId
-    };
-  } catch (error) {
-    throw {
-      status: error.status || 500,
-      message: error.message || 'Error creating medical examination'
-    };
-  }
+  return {
+    id_medical_examination: result.insertId
+  };
 };
 
 medical_examination_service.updateMedicalExamination = async (
@@ -48,48 +55,45 @@ medical_examination_service.updateMedicalExamination = async (
 ) => {
   const pool = getPool();
 
+  const update = buildUpdateQuery(updated_examination, [
+    'prescription',
+    'medical_diagnosis',
+    'symptoms',
+    'date',
+    'reason',
+    'comments',
+    'type'
+  ]);
+
+  if (!update.fields.length) {
+    throw {
+      status: 400,
+      message: 'No hay campos para actualizar'
+    };
+  }
+
   const query = `
     UPDATE medical_examination
-    SET
-      prescription = ?,
-      medical_diagnosis = ?,
-      symptoms = ?,
-      date = ?,
-      reason = ?,
-      comments = ?,
-      type = ?
+    SET ${update.fields.join(', ')}
     WHERE id_medical_examination = ?
   `;
 
-  try {
-    const [result] = await pool.query(query, [
-      updated_examination.prescription,
-      updated_examination.medical_diagnosis,
-      updated_examination.symptoms,
-      updated_examination.date,
-      updated_examination.reason,
-      updated_examination.comments,
-      updated_examination.type,
-      id_medical_examination
-    ]);
+  const [result] = await pool.query(query, [
+    ...update.values,
+    id_medical_examination
+  ]);
 
-    if (result.affectedRows === 0) {
-      throw {
-        status: 404,
-        message: `No se encontró un examen médico con el ID ${id_medical_examination}`
-      };
-    }
-
-    return {
-      id_medical_examination,
-      ...updated_examination
-    };
-  } catch (error) {
+  if (result.affectedRows === 0) {
     throw {
-      status: error.status || 500,
-      message: error.message || 'Error updating medical examination'
+      status: 404,
+      message: `No se encontró un examen médico con el ID ${id_medical_examination}`
     };
   }
+
+  return {
+    id_medical_examination,
+    ...updated_examination
+  };
 };
 
 medical_examination_service.getMedicalExaminationById = async (
@@ -97,24 +101,16 @@ medical_examination_service.getMedicalExaminationById = async (
 ) => {
   const pool = getPool();
 
-  const query = `
+  const [result] = await pool.query(
+    `
     SELECT *
     FROM medical_examination
     WHERE id_medical_examination = ?
-  `;
+    `,
+    [id_medical_examination]
+  );
 
-  try {
-    const [result] = await pool.query(query, [id_medical_examination]);
-
-    if (result.length === 0) return false;
-
-    return result[0];
-  } catch (error) {
-    throw {
-      status: error.status || 500,
-      message: error.message || 'Error obteniendo examen médico por id'
-    };
-  }
+  return result.length ? result[0] : null;
 };
 
 medical_examination_service.getMedicalExaminationsByHistory = async (
@@ -122,23 +118,17 @@ medical_examination_service.getMedicalExaminationsByHistory = async (
 ) => {
   const pool = getPool();
 
-  const query = `
+  const [result] = await pool.query(
+    `
     SELECT *
     FROM medical_examination
     WHERE id_medical_history = ?
     ORDER BY date DESC
-  `;
+    `,
+    [id_medical_history]
+  );
 
-  try {
-    const [result] = await pool.query(query, [id_medical_history]);
-    return result;
-  } catch (error) {
-    throw {
-      status: error.status || 500,
-      message:
-        error.message || 'Error obteniendo exámenes médicos por historial'
-    };
-  }
+  return result;
 };
 
 module.exports = medical_examination_service;

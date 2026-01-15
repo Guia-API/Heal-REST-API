@@ -1,9 +1,8 @@
 const medical_examination_service = require('../services/medical_examination.service');
-const dotenv = require('dotenv');
 
 let self = {};
 
-self.create = async function (req, res) {
+self.create = async (req, res, next) => {
   try {
     const new_examination = req.body;
 
@@ -11,24 +10,15 @@ self.create = async function (req, res) {
       await medical_examination_service.saveMedicalExamination(new_examination);
 
     return res.status(201).json({
-      message: 'Examen médico creado exitosamente',
+      message: 'Consulta médica creada exitosamente',
       medical_examination: response
     });
   } catch (error) {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(500).json({
-        message: 'Error al insertar el examen médico en la base de datos'
-      });
-    }
-
-    console.error('❌ Error en saveMedicalExamination:', error.message);
-    return res.status(500).json({
-      message: 'Error del servidor'
-    });
+    next(error);
   }
 };
 
-self.update = async function (req, res) {
+self.update = async (req, res, next) => {
   try {
     const { id_medical_examination } = req.params;
     const updated_examination = req.body;
@@ -40,24 +30,15 @@ self.update = async function (req, res) {
       );
 
     return res.status(200).json({
-      message: 'Examen médico actualizado exitosamente',
+      message: 'Consulta médica actualizada exitosamente',
       medical_examination: response
     });
   } catch (error) {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(500).json({
-        message: 'Error al actualizar el examen médico en la base de datos'
-      });
-    }
-
-    console.error('❌ Error en updateMedicalExamination:', error.message);
-    return res.status(500).json({
-      message: 'Error del servidor'
-    });
+    next(error);
   }
 };
 
-self.getById = async function (req, res) {
+self.getById = async (req, res, next) => {
   try {
     const { id_medical_examination } = req.params;
 
@@ -68,7 +49,7 @@ self.getById = async function (req, res) {
 
     if (!response) {
       return res.status(404).json({
-        message: 'No se ha encontrado el examen médico'
+        message: 'No se ha encontrado la consulta médica solicitada'
       });
     }
 
@@ -76,20 +57,11 @@ self.getById = async function (req, res) {
       medical_examination: response
     });
   } catch (error) {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(500).json({
-        message: 'Error al obtener el examen médico de la base de datos'
-      });
-    }
-
-    console.error('❌ Error en getMedicalExaminationById:', error.message);
-    return res.status(500).json({
-      message: 'Error del servidor'
-    });
+    next(error);
   }
 };
 
-self.getByMedicalHistory = async function (req, res) {
+self.getByMedicalHistory = async (req, res, next) => {
   try {
     const { id_medical_history } = req.params;
 
@@ -103,19 +75,7 @@ self.getByMedicalHistory = async function (req, res) {
       medical_examinations: response
     });
   } catch (error) {
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(500).json({
-        message: 'Error al obtener los exámenes médicos'
-      });
-    }
-
-    console.error(
-      '❌ Error en getMedicalExaminationsByHistory:',
-      error.message
-    );
-    return res.status(500).json({
-      message: 'Error del servidor'
-    });
+    next(error);
   }
 };
 

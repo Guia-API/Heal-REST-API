@@ -59,7 +59,7 @@ const create_medical_examination_schema = {
       errorMessage: 'Date is required'
     },
     isISO8601: {
-      errorMessage: 'Date must be a valid datetime (YYYY-MM-DD HH:mm:ss)'
+      errorMessage: 'Date must be a valid date (YYYY-MM-DD)'
     },
     toDate: true
   },
@@ -120,13 +120,40 @@ const update_medical_examination_schema = {
     toInt: true
   },
 
-  prescription: create_medical_examination_schema.prescription,
-  medical_diagnosis: create_medical_examination_schema.medical_diagnosis,
-  symptoms: create_medical_examination_schema.symptoms,
-  date: create_medical_examination_schema.date,
-  reason: create_medical_examination_schema.reason,
-  comments: create_medical_examination_schema.comments,
-  type: create_medical_examination_schema.type
+  prescription: {
+    optional: true,
+    ...create_medical_examination_schema.prescription
+  },
+
+  medical_diagnosis: {
+    optional: true,
+    ...create_medical_examination_schema.medical_diagnosis
+  },
+
+  symptoms: {
+    optional: true,
+    ...create_medical_examination_schema.symptoms
+  },
+
+  date: {
+    optional: true,
+    ...create_medical_examination_schema.date
+  },
+
+  reason: {
+    optional: true,
+    ...create_medical_examination_schema.reason
+  },
+
+  comments: {
+    optional: true,
+    ...create_medical_examination_schema.comments
+  },
+
+  type: {
+    optional: true,
+    ...create_medical_examination_schema.type
+  }
 };
 
 const get_medical_examination_schema = {
