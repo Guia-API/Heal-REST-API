@@ -29,40 +29,7 @@ const login_schema = {
   }
 };
 
-/**
- * REFRESH TOKEN
- * Body: { refresh_token }
- */
-const refresh_schema = {
-  refresh_token: {
-    exists: {
-      errorMessage: 'Refresh token is required'
-    },
-    isString: {
-      errorMessage: 'Refresh token must be a string'
-    },
-    trim: true
-  }
-};
-
-/**
- * LOGOUT
- * Body: { refresh_token }
- */
-const logout_schema = {
-  refresh_token: {
-    exists: {
-      errorMessage: 'Refresh token is required'
-    },
-    isString: {
-      errorMessage: 'Refresh token must be a string'
-    },
-    trim: true
-  }
-};
 
 module.exports = {
-  validate_login: checkSchema(login_schema),
-  validate_refresh: checkSchema(refresh_schema),
-  validate_logout: checkSchema(logout_schema)
+  validate_login: checkSchema(login_schema)
 };
