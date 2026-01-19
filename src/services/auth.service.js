@@ -8,9 +8,10 @@ auth_service.getLogin = async (email) => {
 
   const [result] = await pool.query(
     `
-    SELECT id_user, email, password, status
-    FROM user
-    WHERE LOWER(email) = LOWER(?)
+    SELECT u.id_user, u.email, u.password, u.status, e.full_name, e.role
+    FROM user u
+    JOIN employee e ON e.id_user = u.id_user
+    WHERE LOWER(u.email) = LOWER(?)
     LIMIT 1
     `,
     [email]
@@ -23,13 +24,15 @@ auth_service.getLogin = async (email) => {
   return {
     id: result[0].id_user,
     email: result[0].email,
-    password: result[0].password
+    password: result[0].password,
+    name: result[0].name,
+    role: result[0].role
   };
 };
 
 auth_service.generateTokens = async (user) => {
-  const access_token = jwt.generateToken(user.id, user.email);
-  const refresh_token = jwt.generateRefreshToken(user.id, user.email);
+  const access_token = jwt.generateToken(user.id, user.email, user.name, user.role);
+  const refresh_token = jwt.generateRefreshToken(user.id);
 
   const pool = getPool();
 
