@@ -9,6 +9,6 @@ const {
 
 router.post('/login', validate_login, validate, auth_controller.login);
 router.post('/refresh', auth_controller.refresh);
-router.post('/logout',auth_controller.logout);
+router.post('/logout', auth_controller.logout);
 
 module.exports = router;

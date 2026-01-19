@@ -12,8 +12,8 @@ const generateToken = (id, email, name, role) => {
       email,
       name,
       role,
-      iss: 'SSAADSJWT',
-      aud: 'SSAADSJWT'
+      iss: 'HealRESTJWT',
+      aud: 'HealRESTJWT'
     },
     jwtSecret,
     { expiresIn: '20m' }
@@ -24,8 +24,8 @@ const generateRefreshToken = (id) => {
   return jwt.sign(
     {
       id,
-      iss: 'SSAADSJWT',
-      aud: 'SSAADSJWT'
+      iss: 'HealRESTJWT',
+      aud: 'HealRESTJWT'
     },
     refreshSecret,
     { expiresIn: '7d' }

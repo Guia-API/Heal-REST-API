@@ -1,9 +1,5 @@
 const { checkSchema } = require('express-validator');
 
-/**
- * LOGIN
- * Body: { email, password }
- */
 const login_schema = {
   email: {
     exists: {
