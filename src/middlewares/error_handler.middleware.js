@@ -18,7 +18,7 @@ const errorHandler = (err, req, res, next) => {
     const timestamp = new Date().toISOString();
 
     let email = 'Anónimo';
-    if (req.user.email) {
+    if (req.user?.email) {
         email = req.user.email;
     }
 

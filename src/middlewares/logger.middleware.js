@@ -21,7 +21,7 @@ const logger = (req, res, next) => {
         const status = res.statusCode;
 
         let email = 'Anónimo';
-        if (req.user.email) {
+        if (req.user?.email) {
             email = req.user.email;
         }
 
