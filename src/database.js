@@ -38,10 +38,7 @@ async function connectDB() {
         const connection = await pool.getConnection();
         connection.release();
     
-        console.log(`✅ Database connected ➡︎ ${process.env.NODE_ENV}`)
-    
     } catch(error) {
-        console.error("❌ Error in database");
 
         if(process.env.NODE_ENV === "development"){
             console.error("Details: ", error.message)

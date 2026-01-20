@@ -17,7 +17,6 @@ async function run_seeders() {
     } finally {
         const pool = getPool();
         pool.end();
-        console.log("Conexión cerrada exitosamente");
     }
 }
 

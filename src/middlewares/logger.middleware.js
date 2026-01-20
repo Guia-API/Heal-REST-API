@@ -21,8 +21,8 @@ const logger = (req, res, next) => {
         const status = res.statusCode;
 
         let email = 'Anónimo';
-        if (req.decodedToken?.email) {
-            email = req.decodedToken.email;
+        if (req.user.email) {
+            email = req.user.email;
         }
 
         const logMessage =
@@ -30,7 +30,7 @@ const logger = (req, res, next) => {
 
         fs.appendFile(accessLogPath, logMessage, (err) => {
             if (err) {
-                console.error('❌ Error writing access log:', err);
+                next(err);
             }
         });
     });
