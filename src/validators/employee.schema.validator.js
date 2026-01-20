@@ -49,7 +49,7 @@ const base_employee_fields = {
       errorMessage: 'Cell phone must be between 7 and 20 characters'
     }
   },
-  rol: {
+  role: {
     isString: {
       errorMessage: 'Role must be a string'
     },
@@ -74,9 +74,9 @@ const create_employee_schema = {
     exists: { errorMessage: 'Cell phone is required' },
     ...base_employee_fields.cell_phone
   },
-  rol: {
+  role: {
     exists: { errorMessage: 'Role is required' },
-    ...base_employee_fields.rol
+    ...base_employee_fields.role
   },
   email: {
     exists: { errorMessage: 'Email is required' },
@@ -111,9 +111,9 @@ const update_employee_schema = {
     optional: true,
     ...base_employee_fields.cell_phone
   },
-  rol: {
+  role: {
     optional: true,
-    ...base_employee_fields.rol
+    ...base_employee_fields.role
   },
   email: {
     optional: true,

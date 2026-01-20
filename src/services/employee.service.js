@@ -30,7 +30,7 @@ employee_service.saveEmployee = async (data) => {
 
     const [employeeResult] = await connection.query(
       `
-      INSERT INTO employee (id_user, full_name, date_birth, cell_phone, rol)
+      INSERT INTO employee (id_user, full_name, date_birth, cell_phone, role)
       VALUES (?, ?, ?, ?, ?)
       `,
       [
@@ -38,7 +38,7 @@ employee_service.saveEmployee = async (data) => {
         data.full_name,
         data.date_birth,
         data.cell_phone,
-        data.rol
+        data.role
       ]
     );
 
@@ -49,7 +49,7 @@ employee_service.saveEmployee = async (data) => {
       id_user,
       full_name: data.full_name,
       email: data.email,
-      rol: data.rol
+      role: data.role
     };
 
   } catch (error) {
@@ -98,7 +98,7 @@ employee_service.updateEmployee = async (id_employee, data) => {
 
     const employeeUpdate = buildUpdateQuery(
       data,
-      ['full_name', 'date_birth', 'cell_phone', 'rol']
+      ['full_name', 'date_birth', 'cell_phone', 'role']
     );
 
     if (employeeUpdate.fields.length) {
@@ -158,7 +158,7 @@ employee_service.getEmployeeById = async (id_employee) => {
       e.full_name,
       e.date_birth,
       e.cell_phone,
-      e.rol,
+      e.role,
       u.email,
       u.status
     FROM employee e
@@ -188,7 +188,7 @@ employee_service.getEmployees = async (page = 1, limit = 10, status = null) => {
     SELECT
       e.id_employee,
       e.full_name,
-      e.rol,
+      e.role,
       u.email,
       u.status
     FROM employee e

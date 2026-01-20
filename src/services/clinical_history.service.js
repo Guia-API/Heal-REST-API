@@ -58,12 +58,12 @@ clinical_history_service.updateClinicalHistory = async (id_clinical_history, upd
         if(result.affectedRows === 0) {
             throw {
                 status: 404,
-                message: `No se encontró un paciente con el ID ${id_clinical_hisotry}`
+                message: `No se encontró un paciente con el ID ${id_clinical_history}`
             }
         }
 
         return {
-            id_clinical_hisotry, 
+            id_clinical_history, 
             ...updated_clinical_history
         };
     } catch (error){
