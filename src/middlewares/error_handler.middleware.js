@@ -18,8 +18,8 @@ const errorHandler = (err, req, res, next) => {
     const timestamp = new Date().toISOString();
 
     let email = 'Anónimo';
-    if (req.decodedToken?.email) {
-        email = req.decodedToken.email;
+    if (req.user?.email) {
+        email = req.user.email;
     }
 
     const logMessage =

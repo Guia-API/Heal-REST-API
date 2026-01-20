@@ -25,7 +25,6 @@ const startServer = async () => {
         await connectDB();
 
         const server = app.listen(PORT,'0.0.0.0', () => {
-            console.log(`🚀 Server running on http://localhost:${PORT}/api`);
         })
 
         return server;
