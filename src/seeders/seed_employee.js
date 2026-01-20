@@ -3,19 +3,35 @@ const bcrypt = require('bcrypt');
 
 const employees = [
   {
-    full_name: "Dr. Roberto Gómez",
+    full_name: "Oscar Dominguez Ibarra",
+    date_birth: "2000-09-20",
+    cell_phone: "2291116334",
+    role: "Administrador",
+    email: "oscar.dominguez@clinic.com",
+    password: "@123456Patito"
+  },
+  {
+    full_name: "Roberto Gómez Bolaños",
     date_birth: "1970-04-18",
     cell_phone: "2291122334",
-    rol: "Doctor",
+    role: "Doctor",
     email: "roberto.gomez@clinic.com",
     password: "@123456Patito"
   },
   {
-    full_name: "Dra. Ana Torres",
+    full_name: "Ana Torres Valez",
     date_birth: "1982-09-05",
     cell_phone: "2295544332",
-    rol: "Doctor",
+    role: "Recepcionista",
     email: "ana.torres@clinic.com",
+    password: "@123456Patito"
+  },
+  {
+    full_name: "Maria Gómez Gónzales",
+    date_birth: "1992-09-05",
+    cell_phone: "2295244332",
+    role: "Enfermera",
+    email: "maria.gomez@clinic.com",
     password: "@123456Patito"
   }
 ];
@@ -48,14 +64,14 @@ async function seed_employees() {
           full_name,
           date_birth,
           cell_phone,
-          rol
+          role
         ) VALUES (?, ?, ?, ?, ?)`,
         [
           id_user,
           employee.full_name,
           employee.date_birth,
           employee.cell_phone,
-          employee.rol
+          employee.role
         ]
       );
     }
