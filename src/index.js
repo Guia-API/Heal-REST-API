@@ -10,7 +10,12 @@ const loggerMiddleware = require('./middlewares/logger.middleware')
 dotenv.config();
 
 const PORT = process.env.SERVER_PORT || 3000
-app.use(cors());
+
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
 app.use(loggerMiddleware);
 app.use("/api", api_rate_limiter, router);
 
