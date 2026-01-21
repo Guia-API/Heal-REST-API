@@ -12,31 +12,39 @@ const {
 } = process.env;
 
 let pool = null;
+const MAX_RETRIES = 10;
+const RETRY_DELAY = 3000;
 
 async function connectDB() {
-    try {
-        pool = mysql.createPool({
-            host: DB_HOST, 
-            user: DB_USER,
-            password: DB_PASSWORD,
-            database: DB_NAME,
-            port: DB_PORT,
-            waitForConnections: true,
-            connectionLimit: 10,
-            queueLimit: 0
-        });
+    for(let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            pool = mysql.createPool({
+                host: DB_HOST, 
+                user: DB_USER,
+                password: DB_PASSWORD,
+                database: DB_NAME,
+                port: DB_PORT,
+                waitForConnections: true,
+                connectionLimit: 10,
+                queueLimit: 0
+            });
 
-        const connection = await pool.getConnection();
-        connection.release();
-    
-    } catch(error) {
+            const connection = await pool.getConnection();
+            connection.release();
+            return;
 
-        if(NODE_ENV === "development"){
-            console.error("Details: ", error.message)
-        }
+        } catch(error) {
+            if(attempt === MAX_RETRIES) {
+                if(NODE_ENV === "development"){
+                console.error("Details: ", error.message)
+            }
 
-        process.exit(1);
-    };
+            process.exit(1);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        };
+    }
 }
 
 function getPool(){
