@@ -5,12 +5,26 @@ services:
     command: npm start
     env_file:
       - .env
-    ports:
-      - "3000:3000"
     depends_on:
-      db:        
-        condition: service_healthy
+      - db
+    networks:
+      - backend
+      - frontend
 
+  nginx:
+    image: nginx:alpine
+    container_name: heal_nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.crt:/etc/nginx/certs/nginx.crt:ro
+      - ./nginx.key:/etc/nginx/certs/nginx.key:ro
+    depends_on:
+      - api
+    networks:
+      - frontend
+      
   db:
     image: mysql:8.0
     container_name: heal_db
@@ -22,13 +36,12 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql:/docker-entrypoint-initdb.d
-    ports:
-      - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    networks:
+      - backend
 
 volumes:
   mysql_data:
+
+networks:
+  frontend:
+  backend:
