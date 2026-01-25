@@ -19,8 +19,8 @@ const login_schema = {
       errorMessage: 'Password must be a string'
     },
     isLength: {
-      options: { min: 8, max: 128 },
-      errorMessage: 'Password must be between 8 and 128 characters'
+      options: { min: 8, max: 15 },
+      errorMessage: 'Password must be between 8 and 15 characters'
     }
   }
 };
